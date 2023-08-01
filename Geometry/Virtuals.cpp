@@ -4,7 +4,7 @@
 
 VirtualLine::VirtualLine() : VirtualLine(Array2f(), Array2f()){};
 
-VirtualLine::VirtualLine(Array2f p1, Array2f p2) : start(p1), end(p2){};
+VirtualLine::VirtualLine(Array2f p1, Array2f p2, ID2D1Brush* b) : start(p1), end(p2), VirtualShape(b){};
 
 bool VirtualLine::isPointInside(Array2f p) const {
 	return false;
@@ -26,22 +26,32 @@ void VirtualLine::translate(Vector2f movement) {
 	end = end + movement;
 }
 
-void VirtualLine::draw(ID2D1HwndRenderTarget* rt) const {
+void VirtualLine::translateStart(Vector2f movement) {
+	start = start + movement;
+}
 
+void VirtualLine::translateEnd(Vector2f movement) {
+	end = end + movement;
+}
+
+void VirtualLine::draw(ID2D1HwndRenderTarget* rt) const {
+	if (brush) {
+		rt->DrawLine(D2D1::Point2F(start(0), start(1)), D2D1::Point2F(end(0), end(1)), brush);
+	}
 }
 
 VirtualRectangle::VirtualRectangle(){};
 
 VirtualRectangle::VirtualRectangle(Vector2f dims) : VirtualRectangle(Array2f(), dims){};
 
-VirtualRectangle::VirtualRectangle(Array2f lt, Vector2f dims) :
-	left_top(lt), right_bottom(VirtualPoint2F(lt) + dims), dimensions(dims) {};
+VirtualRectangle::VirtualRectangle(Array2f lt, Vector2f dims, ID2D1Brush* b) :
+	left_top(lt), right_bottom(VirtualPoint2F(lt) + dims), dimensions(dims), VirtualShape(b) {};
 
-VirtualRectangle::VirtualRectangle(VirtualPoint2F lt, Vector2f dims) :
-	left_top(lt), right_bottom(lt + dims), dimensions(dims) {};
+VirtualRectangle::VirtualRectangle(VirtualPoint2F lt, Vector2f dims, ID2D1Brush* b) :
+	left_top(lt), right_bottom(lt + dims), dimensions(dims), VirtualShape(b) {};
 
-VirtualRectangle::VirtualRectangle(Array2f lt, Array2f rb) : 
-	left_top(lt), right_bottom(rb), dimensions(rb - lt) {
+VirtualRectangle::VirtualRectangle(Array2f lt, Array2f rb, ID2D1Brush* b) :
+	left_top(lt), right_bottom(rb), dimensions(rb - lt), VirtualShape(b) {
 	
 };
 
@@ -247,11 +257,7 @@ void VirtualRectangle::toDrawObject(shared_ptr<DrawShape>& obj, ID2D1Brush* b) c
 */
 
 void VirtualRectangle::draw(ID2D1HwndRenderTarget* rt) const {
-	//outputDebugLine("TES");
 	if (brush) {
-		//outputDebugLine("FILL");
-		//Array2f left_top = rectangle->getLeftTop();
-		//Array2f right_bottom = rectangle->getRightBottom();
 		D2D1_RECT_F rect = { left_top(0), left_top(1), right_bottom(0), right_bottom(1) };
 		rt->DrawRectangle(rect, brush);
 	}
@@ -259,7 +265,6 @@ void VirtualRectangle::draw(ID2D1HwndRenderTarget* rt) const {
 
 void VirtualRectangle::fill(ID2D1HwndRenderTarget* rt) const {
 	if (brush) {
-
 		D2D1_RECT_F rect = { left_top(0), left_top(1), right_bottom(0), right_bottom(1) };
 		rt->FillRectangle(rect, brush);
 	}

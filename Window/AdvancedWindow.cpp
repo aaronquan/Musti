@@ -112,7 +112,6 @@ void ControllersWindow::handleKeyUp(WPARAM wParam, LPARAM lParam) {
 
 void ControllersWindow::handleMouseMove(WPARAM wParam, LPARAM lParam) {
     inputController->onMouseMove(wParam, lParam);
-    
 }
 
 void ControllersWindow::handleLeftMouseDown(WPARAM wParam, LPARAM lParam) {

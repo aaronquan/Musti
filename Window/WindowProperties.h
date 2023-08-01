@@ -77,22 +77,28 @@ public:
     void updateThreadId();
     unsigned int getThreadId() const;
 
-    Vector2f getDimensions() const;
     void setWindowPosition(Array2f position);
+    void newWindowPosition(Array2f position);
+
+    Vector2f getDimensions() const;
+    Vector2f getFullDimensions() const;
+    void setWindowSize(Vector2f dims);
+    void newWindowSize(Vector2f dims);
+
     Array2f getLeftTop() const;
 
     VirtualRectangle getWindowRectangle() const;
 
-    Vector2f getFullDimensions() const;
-    void newWindowPosition(Array2f position);
 
     Array2i toAbsolutePosition(Array2f position);
     Array2i toAbsolutePosition(Array2i position);
+
+    vector<DisplayDevice> getDisplays() const;
 };
 
 class ExternalWindowDetails {
 private:
-    //HWND* handle;
+    HWND* handle;
     unsigned int threadId;
     wstring title;
 
@@ -102,6 +108,9 @@ public:
     void update(HWND* hwnd);
     wstring getTitle() const;
     unsigned int getThreadId() const;
+    VirtualRectangle getWindowRectangle() const;
+    void setWindowRectangle(VirtualRectangle vr);
+
 };
 
 class ExternalWindows : public Updater {
@@ -122,5 +131,6 @@ public:
     ExternalWindows();
     void update();
     vector<ExternalWindowDetails> getWindows() const;
+    ExternalWindowDetails getWindow(unsigned int i) const;
     shared_ptr<ExternalWindowDetails> getActiveWindow() const;
 };

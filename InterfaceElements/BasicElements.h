@@ -120,6 +120,7 @@ public:
 	void setLabel(wstring l);
 	wstring getLabel() const;
 	void draw(ID2D1HwndRenderTarget* rt) const;
+	void fill(ID2D1HwndRenderTarget* rt) const;
 };
 
 class DraggableShape : public DrawObject {
@@ -160,7 +161,7 @@ public:
 	bool isInside(Array2f p);
 	void handleMouseDown(Array2f p);
 	void handleMouseUp();
-	void movement(Vector2f v);
+	bool movement(Vector2f v);
 	
 	void draw(ID2D1HwndRenderTarget* rt) const;
 	void fill(ID2D1HwndRenderTarget* rt) const;
@@ -187,6 +188,8 @@ private:
 	ID2D1Brush* text_brush;
 	ID2D1Brush* back_brush;
 
+	function<void(unsigned int)> func;
+
 	void triangleOpenIndicator();
 	void triangleCloseIndicator();
 public:
@@ -194,10 +197,12 @@ public:
 	DropDownList(Array2f lt, Vector2f bd, ID2D1Brush* bb,
 	IDWriteFactory* wf, IDWriteTextFormat* f, ID2D1Brush* tb);
 	void setSelected(wstring sel);
+	void setFunction(function<void(unsigned int)> f);
 	unsigned int addButton(wstring text=L"", function<void()> func = []() {});
 	void activate(Array2f position);
 	void openList();
 	void closeList();
+	void clearList();
 	void draw(ID2D1HwndRenderTarget* rt) const;
 
 };

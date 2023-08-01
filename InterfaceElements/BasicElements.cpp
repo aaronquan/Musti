@@ -150,6 +150,11 @@ void TextRectangleButton::draw(ID2D1HwndRenderTarget* rt) const {
 	label.draw(rt);
 }
 
+void TextRectangleButton::fill(ID2D1HwndRenderTarget* rt) const {
+	RectangleButton::fill(rt);
+	label.draw(rt);
+}
+
 DraggableShape::DraggableShape() : DraggableShape(nullptr) {};
 
 DraggableShape::DraggableShape(shared_ptr<DrawShape> obj) : drawShape(obj), isDragging(false) {
@@ -249,10 +254,12 @@ void NewDragShape::handleMouseDown(Array2f p) {
 void NewDragShape::handleMouseUp() {
 	isDragging = false;
 }
-void NewDragShape::movement(Vector2f v) {
+bool NewDragShape::movement(Vector2f v) {
 	if (shape && isDragging) {
 		shape->translate(v);
+		return true;
 	}
+	return false;
 }
 
 void NewDragShape::draw(ID2D1HwndRenderTarget* rt) const {
@@ -275,33 +282,39 @@ list(lt, bd, bb, wf, f, tb), is_open(false), buttons_rect(Array2f(lt(0), lt(1)+b
 		}
 	};
 	list.setFunction(func);
+	triangleOpenIndicator();
+	/*
 	float ttop = lt(1) + 0.3 * bd(1);
 	float tleft = lt(0) + 0.85 * bd(0);
 	float tright = lt(0) + 0.93 * bd(0);
 	float tbottom = lt(1) + 0.7 * bd(1);
-	list_indic = VirtualTriangle(Array2f(tleft, ttop), Array2f(tright, ttop), Array2f((tright-tleft)/2, tbottom));
+	list_indic = VirtualTriangle(Array2f(tleft, ttop), Array2f(tright, ttop), Array2f((tright-tleft)/2, tbottom), tb);*/
 
 	//list.activate()
 };
 
 void DropDownList::triangleOpenIndicator() {
-	float ttop = left_top(1) + 0.3 * button_dims(1);
-	float tleft = left_top(0) + 0.85 * button_dims(0);
-	float tright = left_top(0) + 0.93 * button_dims(0);
-	float tbottom = left_top(1) + 0.7 * button_dims(1);
-	list_indic = VirtualTriangle(Array2f(tleft, ttop), Array2f(tright, ttop), Array2f((tright - tleft) / 2, tbottom));
+	float ttop = left_top(1) + (0.3 * button_dims(1));
+	float tleft = left_top(0) + (0.88 * button_dims(0));
+	float tright = left_top(0) + (0.96 * button_dims(0));
+	float tbottom = left_top(1) + (0.7 * button_dims(1));
+	list_indic = VirtualTriangle(Array2f(tleft, ttop), Array2f(tright, ttop), Array2f((tright + tleft) / 2, tbottom), text_brush);
 }
 
 void DropDownList::triangleCloseIndicator() {
 	float ttop = left_top(1) + 0.3 * button_dims(1);
-	float tleft = left_top(0) + 0.85 * button_dims(0);
-	float tright = left_top(0) + 0.93 * button_dims(0);
+	float tleft = left_top(0) + 0.88 * button_dims(0);
+	float tright = left_top(0) + 0.96 * button_dims(0);
 	float tbottom = left_top(1) + 0.7 * button_dims(1);
-	list_indic = VirtualTriangle(Array2f(tleft, tbottom), Array2f(tright, tbottom), Array2f((tright - tleft) / 2, ttop));
+	list_indic = VirtualTriangle(Array2f(tleft, tbottom), Array2f(tright, tbottom), Array2f((tright + tleft) / 2, ttop), text_brush);
 }
 
 void DropDownList::setSelected(wstring sel) {
 	list.setLabel(sel);
+}
+
+void DropDownList::setFunction(function<void(unsigned int)> f) {
+	func = f;
 }
 
 unsigned int DropDownList::addButton(wstring text, function<void()> func) {
@@ -324,6 +337,7 @@ void DropDownList::activate(Array2f position) {
 			//outputDebugLine(to_string(butt_id));
 			drop_buttons[butt_id]->activate(position);
 			setSelected(drop_buttons[butt_id]->getLabel());
+			if(func) func(butt_id);
 		}
 		closeList();
 	}
@@ -337,20 +351,26 @@ void DropDownList::activate(Array2f position) {
 
 void DropDownList::openList() {
 	is_open = true;
-	//outputDebugLine("OPEN");
+	triangleCloseIndicator();
 }
 
 void DropDownList::closeList() {
 	is_open = false;
+	triangleOpenIndicator();
+}
+
+void DropDownList::clearList() {
+	drop_buttons.clear();
+	buttons_rect.setDimensions(Vector2f());
 }
 
 void DropDownList::draw(ID2D1HwndRenderTarget* rt) const {
-	list.draw(rt);
-	list_indic.draw(rt);
+	list.fill(rt);
+	list_indic.fill(rt);
 	if (is_open) {
 		//outputDebugLine("op");
 		for (unique_ptr<TextRectangleButton> const& trb: drop_buttons) {
-			trb->draw(rt);
+			trb->fill(rt);
 		}
 	}
 }

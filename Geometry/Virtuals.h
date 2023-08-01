@@ -33,7 +33,7 @@ private:
 	VirtualPoint2F end;
 public:
 	VirtualLine();
-	VirtualLine(Array2f p1, Array2f p2);
+	VirtualLine(Array2f p1, Array2f p2, ID2D1Brush* b = nullptr);
 
 	float side(Array2f pt) const;
 	static float side(Array2f pt, Array2f p1, Array2f p2); // d == 0 on line
@@ -41,6 +41,8 @@ public:
 	bool isPointInside(Array2f p) const;
 	Region getPointRegion(Array2f p) const;
 	void translate(Vector2f movement);
+	void translateStart(Vector2f movement);
+	void translateEnd(Vector2f movement);
 
 	void draw(ID2D1HwndRenderTarget* rt) const;
 	void fill(ID2D1HwndRenderTarget* rt) const{};
@@ -57,9 +59,9 @@ private:
 public:
 	VirtualRectangle();
 	VirtualRectangle(Vector2f dims);
-	VirtualRectangle(Array2f lt, Vector2f dims);
-	VirtualRectangle(VirtualPoint2F lt, Vector2f dims);
-	VirtualRectangle(Array2f lt, Array2f rb); //two points, expects lt to be left_top
+	VirtualRectangle(Array2f lt, Vector2f dims, ID2D1Brush* b = nullptr);
+	VirtualRectangle(VirtualPoint2F lt, Vector2f dims, ID2D1Brush* b = nullptr);
+	VirtualRectangle(Array2f lt, Array2f rb, ID2D1Brush* b = nullptr); //two points, expects lt to be left_top
 	//VirtualRectangle(VirtualRectangleI vr);
 
 	bool isPointInside(Array2f p) const;

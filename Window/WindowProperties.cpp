@@ -152,11 +152,36 @@ Vector2f WindowDetails::getDimensions() const {
     return window.getDimensions();
 }
 
+Vector2f WindowDetails::getFullDimensions() const{
+    return fullWindow.getDimensions();
+};
+
 void WindowDetails::setWindowPosition(Array2f position) {
     window.setLeftTopPosition(position);
     RECT r;
     GetWindowRect(*hwnd, &r);
     fullWindow.setLeftTopPosition(Array2f(r.left, r.top));
+}
+
+void WindowDetails::newWindowPosition(Array2f position) {
+    setWindowPosition(position);
+    Vector2f dims = fullWindow.getDimensions();
+    SetWindowPos(*hwnd, HWND_TOP, position(0), position(1), dims(0), dims(1), SWP_SHOWWINDOW);
+}
+
+void WindowDetails::setWindowSize(Vector2f dims) {
+    window.setDimensions(dims);
+    RECT r;
+    GetWindowRect(*hwnd, &r);
+    fullWindow.setDimensions(Vector2f(r.right - r.left, r.bottom - r.top));
+}
+
+void WindowDetails::newWindowSize(Vector2f dims) {
+    setWindowSize(dims);
+    Array2f left_top = fullWindow.getLeftTop();
+    //outputDebugLine("DS");
+    //outputDebugLine(dims);
+    SetWindowPos(*hwnd, HWND_TOP, left_top(0), left_top(1), dims(0), dims(1), SWP_SHOWWINDOW);
 }
 
 Array2f WindowDetails::getLeftTop() const {
@@ -167,13 +192,6 @@ VirtualRectangle WindowDetails::getWindowRectangle() const {
     return window;
 }
 
-void WindowDetails::newWindowPosition(Array2f position) {
-    setWindowPosition(position);
-    Array2f dims = fullWindow.getDimensions();
-    outputDebugLine(dims);
-    SetWindowPos(*hwnd, HWND_TOP, position(0), position(1), dims(0), dims(1), SWP_SHOWWINDOW);
-}
-
 Array2i WindowDetails::toAbsolutePosition(Array2f position) {
     Array2i pos = mainMonitor.monitorToAbsolute(position);
     return pos;
@@ -182,6 +200,10 @@ Array2i WindowDetails::toAbsolutePosition(Array2f position) {
 Array2i WindowDetails::toAbsolutePosition(Array2i position) {
     Array2i pos = mainMonitor.monitorToAbsolute(position);
     return pos;
+}
+
+vector<DisplayDevice> WindowDetails::getDisplays() const {
+    return displays;
 }
 
 ExternalWindowDetails::ExternalWindowDetails() : threadId(0) {};
@@ -196,9 +218,14 @@ void ExternalWindowDetails::update(HWND* hwnd) {
     wstring windowTitle = wstring(buffer);
     delete[] buffer;
 
+    handle = hwnd;
     threadId = GetWindowThreadProcessId(*hwnd, nullptr);
     //outputDebugLine(windowTitle);
     title = windowTitle;
+
+    RECT winRect;
+    GetWindowRect(*hwnd, &winRect);
+    windowRectangle = VirtualRectangle(Array2f(winRect.left, winRect.top), Array2f(winRect.right, winRect.bottom));
 }
 
 wstring ExternalWindowDetails::getTitle() const {
@@ -207,6 +234,16 @@ wstring ExternalWindowDetails::getTitle() const {
 
 unsigned int ExternalWindowDetails::getThreadId() const {
     return threadId;
+}
+
+VirtualRectangle ExternalWindowDetails::getWindowRectangle() const {
+    return windowRectangle;
+}
+
+void ExternalWindowDetails::setWindowRectangle(VirtualRectangle vr) {
+    const Array2f lt = vr.getLeftTop();
+    const Vector2f dims = vr.getDimensions();
+    SetWindowPos(*handle, HWND_NOTOPMOST, lt(0), lt(1), dims(0), dims(1), SWP_SHOWWINDOW);
 }
 
 ExternalWindows::ExternalWindows() : activeIndex(-1) {
@@ -251,6 +288,15 @@ void ExternalWindows::update() {
 
 vector<ExternalWindowDetails> ExternalWindows::getWindows() const {
     return windows;
+}
+
+ExternalWindowDetails ExternalWindows::getWindow(unsigned int i) const {
+    try {
+        return windows[i];
+    }
+    catch (out_of_range e) {
+        outputDebugLine(e.what());
+    }
 }
 
 shared_ptr<ExternalWindowDetails> ExternalWindows::getActiveWindow() const {
