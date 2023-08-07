@@ -270,6 +270,51 @@ void NewDragShape::fill(ID2D1HwndRenderTarget* rt) const {
 	shape->fill(rt);
 }
 
+HoverShape::HoverShape() : HoverShape(nullptr){};
+
+HoverShape::HoverShape(shared_ptr<VirtualShape> sh, ID2D1Brush* b) : shape(sh), inside(false){
+	if(shape){
+		shape->setBrush(b);
+	}
+}
+
+void HoverShape::setFunctionIn(function<void()> f) {
+	funcIn = f;
+}
+
+void HoverShape::setFunctionOut(function<void()> f) {
+	funcOut = f;
+}
+
+void HoverShape::activate(Array2f position) {
+	if (shape) {
+		if(!inside && shape->isPointInside(position)){
+			if(funcIn){
+				funcIn();
+				inside = true;
+			}
+		}
+		else if(inside && !shape->isPointInside(position)){
+			if (funcOut) {
+				funcOut();
+				inside = false;
+			}
+		}
+	}
+}
+
+void HoverShape::draw(ID2D1HwndRenderTarget* rt) const{
+	if (shape) {
+		shape->draw(rt);
+	}
+};
+void HoverShape::fill(ID2D1HwndRenderTarget* rt) const{
+	if (shape) {
+		outputDebugLine("FILL");
+		shape->fill(rt);
+	}
+};
+
 DropDownList::DropDownList() : DropDownList(Array2f(0, 0), Vector2f(100, 20), nullptr, nullptr, nullptr, nullptr){};
 
 DropDownList::DropDownList(Array2f lt, Vector2f bd, ID2D1Brush* bb, 
@@ -373,4 +418,36 @@ void DropDownList::draw(ID2D1HwndRenderTarget* rt) const {
 			trb->fill(rt);
 		}
 	}
+}
+
+Arrow::Arrow() : Arrow(Array2f(), Vector2f()) {};
+
+Arrow::Arrow(Array2f p1, Array2f p2, float tw, float hs, ID2D1Brush* b) :// brush(b),
+tail(DrawLine(p1, p2, b, tw)) {
+	
+	Vector2f v(p2(0)-p1(0), p2(1)-p1(1));
+	v.normalize();
+	Array2f n(-v(1), v(0));
+	v = v * hs;
+	n = n * hs;
+	Array2f t1(p2(0) + n(0), p2(1) + n(1));
+	Array2f t2(p2(0) - n(0), p2(1) - n(1));
+	Array2f t3(p2(0) + v(0), p2(1) + v(1));
+	head = VirtualTriangle(t1, t2, t3, b);
+}
+
+Arrow::Arrow(Array2f p, Vector2f v, float tw, float hs, ID2D1Brush* b) : 
+Arrow(p, Array2f(p(0) + v(0), p(1) + v(1)), tw, hs, b){}
+
+void Arrow::setBrush(ID2D1Brush* b) {
+	tail.setBrush(b);
+	head.setBrush(b);
+	//brush = b;
+}
+
+void Arrow::draw(ID2D1HwndRenderTarget* rt) const {
+	//if (brush) {
+		tail.draw(rt);
+		head.fill(rt);
+	//}
 }

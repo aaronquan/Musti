@@ -220,7 +220,6 @@ void ExternalWindowDetails::update(HWND* hwnd) {
 
     handle = hwnd;
     threadId = GetWindowThreadProcessId(*hwnd, nullptr);
-    //outputDebugLine(windowTitle);
     title = windowTitle;
 
     RECT winRect;
@@ -236,14 +235,24 @@ unsigned int ExternalWindowDetails::getThreadId() const {
     return threadId;
 }
 
+void ExternalWindowDetails::attachThread(unsigned int th, bool b) {
+    AttachThreadInput(threadId, th, b);
+}
+
 VirtualRectangle ExternalWindowDetails::getWindowRectangle() const {
     return windowRectangle;
 }
 
-void ExternalWindowDetails::setWindowRectangle(VirtualRectangle vr) {
+void ExternalWindowDetails::setWindowRectangle(VirtualRectangle vr) const {
     const Array2f lt = vr.getLeftTop();
     const Vector2f dims = vr.getDimensions();
-    SetWindowPos(*handle, HWND_NOTOPMOST, lt(0), lt(1), dims(0), dims(1), SWP_SHOWWINDOW);
+    //outputDebugLine(to_string((long)handle));
+    SetWindowPos(*handle, nullptr, lt(0), lt(1), dims(0), dims(1), SWP_SHOWWINDOW | SWP_NOSIZE);
+}
+
+bool ExternalWindowDetails::setActive() const {
+    outputDebugLine(to_string((long)handle));
+    return SetForegroundWindow(*handle);
 }
 
 ExternalWindows::ExternalWindows() : activeIndex(-1) {

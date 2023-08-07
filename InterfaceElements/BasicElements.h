@@ -167,7 +167,23 @@ public:
 	void fill(ID2D1HwndRenderTarget* rt) const;
 };
 
+class HoverShape : public DrawObject {
+private:
+	shared_ptr<VirtualShape> shape;
+	function<void()> funcIn;
+	function<void()> funcOut;
+	bool inside;
+public:
+	HoverShape();
+	HoverShape(shared_ptr<VirtualShape> sh, ID2D1Brush* b = nullptr);
+	void setFunctionIn(function<void()> f);
+	void setFunctionOut(function<void()> f);
+	void activate(Array2f position);
 
+	void draw(ID2D1HwndRenderTarget* rt) const;
+	void fill(ID2D1HwndRenderTarget* rt) const;
+
+};
 
 class DropDownList : public DrawObject {
 private:
@@ -207,14 +223,19 @@ public:
 
 };
 
-class Arrow : public DrawObject {
+class Arrow {
 private:
-	DrawLine dl;
-	Vector2f virtualLine;
-	VirtualRectangle virtualLineGeometry;
+	DrawLine tail;
+	VirtualTriangle head;
+	//ID2D1Brush* brush;
 public:
-	Arrow(Array2f p, Vector2f v, ID2D1Brush* ab);
+	Arrow();
+	Arrow(Array2f p1, Array2f p2, float tw=4, float hs=6, ID2D1Brush* b=nullptr);
+	Arrow(Array2f p, Vector2f v, float tw=4, float hs=6, ID2D1Brush* b=nullptr);
+
+	void setBrush(ID2D1Brush* b);
 	void draw(ID2D1HwndRenderTarget* rt) const;
+	void fill(ID2D1HwndRenderTarget* rt) const {};
 };
 
 class Slider : public DrawObject {

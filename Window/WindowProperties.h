@@ -108,8 +108,12 @@ public:
     void update(HWND* hwnd);
     wstring getTitle() const;
     unsigned int getThreadId() const;
+
+    void attachThread(unsigned int th, bool b);
+
     VirtualRectangle getWindowRectangle() const;
-    void setWindowRectangle(VirtualRectangle vr);
+    void setWindowRectangle(VirtualRectangle vr) const; //not working for external handle
+    bool setActive() const; //not working
 
 };
 

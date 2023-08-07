@@ -309,6 +309,7 @@ void VirtualCircle::draw(ID2D1HwndRenderTarget* rt) const {
 
 void VirtualCircle::fill(ID2D1HwndRenderTarget* rt) const {
 	if (brush) {
+		outputDebugLine("FILL CIRC");
 		D2D1_ELLIPSE eli = D2D1::Ellipse(D2D1::Point2F(centre(0), centre(1)), radius_x, radius_y);
 		rt->FillEllipse(eli, brush);
 	}

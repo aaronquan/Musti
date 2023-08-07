@@ -31,9 +31,11 @@ class VirtualLine : public VirtualShape {
 private:
 	VirtualPoint2F start;
 	VirtualPoint2F end;
+
 public:
 	VirtualLine();
 	VirtualLine(Array2f p1, Array2f p2, ID2D1Brush* b = nullptr);
+	VirtualLine(Array2f p1, Vector2f p2, ID2D1Brush* b = nullptr);
 
 	float side(Array2f pt) const;
 	static float side(Array2f pt, Array2f p1, Array2f p2); // d == 0 on line
@@ -166,6 +168,8 @@ public:
 	void draw(ID2D1HwndRenderTarget* rt) const;
 	void fill(ID2D1HwndRenderTarget* rt) const;
 };
+
+//class
 
 //class PathGeometry : public 
 

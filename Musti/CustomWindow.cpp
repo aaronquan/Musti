@@ -353,32 +353,53 @@ void AppTest::createResources() {
 
     float div = 5;
     Vector2f monDim = windowDetails->getDisplays()[0].getPelsSize()/div;
-    //outputDebugLine(monDim);
 
-    Array2f monPt = Array2f(200, 400);
-    monitor = VirtualRectangle(monPt, monDim, brushController->getBrush("blue"));
-    small_window = make_shared<VirtualRectangle>();
-    //small_window->setBrush(brushController->getBrush("red"));
-    window_drag = NewDragShape(small_window, brushController->getBrush("red"));
-
-    list.setFunction([this, monPt, div](unsigned int i) {
-        outputDebugLine(i);
+    vector<DisplayDevice> devices = windowDetails->getDisplays();
+    Array2f stPt = Array2f(50, 400);
+    Array2f monPt = stPt;
+    for (DisplayDevice dd : devices) {
+        Vector2f monDim = dd.getPelsSize() / div;
+        monitors.push_back(VirtualRectangle(monPt, monDim, brushController->getBrush("blue")));
+        monPt = Array2f(monPt(0)+monDim(0), monPt(1));
+    }
+    small_window = make_shared<VirtualRectangle>(Array2f(), Vector2f(), brushController->getBrush("green"));
+    list.setFunction([this, stPt, div](unsigned int i) {
         ExternalWindowDetails ewd = externalWindows->getWindow(i);
-        outputDebugLine(ewd.getTitle());
         VirtualRectangle wr = ewd.getWindowRectangle();
-
+        //selectedWindow = ewd;
         small_window->setDimensions(wr.getDimensions()/div);
-        small_window->setLeftTopPosition((wr.getLeftTop()/div) + monPt);
-        //small_window = wr;
-        
+        small_window->setLeftTopPosition((wr.getLeftTop()/div) + stPt);
     });
 
-    frameUpdater->addFunction([this]() {
-        list.clearList();
-        vector<ExternalWindowDetails> winds = externalWindows->getWindows();
-        for (ExternalWindowDetails win : winds) {
-            list.addButton(win.getTitle());
+    function<void()> externWindowsUpdate = [this, stPt, div]() {
+        if (GetActiveWindow() != GetForegroundWindow()) {
+            list.clearList();
+            small_windows.clear();
+            vector<ExternalWindowDetails> winds = externalWindows->getWindows();
+            for (ExternalWindowDetails win : winds) {
+                list.addButton(win.getTitle());
+                VirtualRectangle wr = win.getWindowRectangle();
+                wr.setDimensions(wr.getDimensions() / div);
+                wr.setLeftTopPosition((wr.getLeftTop()/div) + stPt);
+                wr.setBrush(brushController->getBrush("red"));
+                small_windows.push_back(wr);
+            }
         }
+    };
+    externWindowsUpdate();
+    frameUpdater->addFunction(externWindowsUpdate);
+
+    arr = Arrow(Array2f(200, 200), Array2f(350, 150), 10, 20);
+    arr.setBrush(brushController->getBrush("green"));
+
+    circ = make_shared<VirtualCircle>(Array2f(400, 300), 20, 20, brushController->getBrush("blue"));
+    //circ->setBrush(brushController->getBrush("blue"));
+    hoverCirc = HoverShape(circ, brushController->getBrush("blue"));
+    hoverCirc.setFunctionIn([this]() {
+        circ->setBrush(brushController->getBrush("green"));
+    });
+    hoverCirc.setFunctionOut([this]() {
+        circ->setBrush(brushController->getBrush("red"));
     });
 }
 
@@ -413,13 +434,24 @@ void AppTest::drawFrame(ID2D1HwndRenderTarget* rt) {
     dlm.draw(rt); dlm2.draw(rt); dlm3.draw(rt); dlm4.draw(rt);
     bm.draw(rt);
 
+    arr.draw(rt);
+
+    hoverCirc.fill(rt);
+    //circ->fill(rt);
+
     //virt_line.draw(rt);
     //circ_sta.fill(rt);
     //circ_end.fill(rt);
 
     //test_tri.fill(rt);
-    monitor.draw(rt);
-    window_drag.fill(rt);
+    for (const VirtualRectangle& monitor : monitors) {
+        monitor.draw(rt);
+    }
+    for(const VirtualRectangle& swindow : small_windows) {
+        swindow.draw(rt);
+    }
+    small_window->draw(rt);
+    //window_drag.fill(rt);
 }
 
 void AppTest::handleKeyDown(unsigned int keyCode, char c) {
@@ -450,6 +482,7 @@ void AppTest::handleKeyUp(unsigned int keyCode, char c) {
 }
 
 void AppTest::handleMouseMove(Array2f position, Vector2f movement) {
+    hoverCirc.activate(position);
     //ds.move(movement);
     //shared_ptr<VirtualObject> vr = ds.toVirtualObject();
     //vr->isPointInside(position);
@@ -478,10 +511,20 @@ void AppTest::handleMouseMove(Array2f position, Vector2f movement) {
     if(has_move_sta) virt_line.translateStart(movement);
     bool has_move_end = circ_end.movement(movement);
     if (has_move_end) virt_line.translateEnd(movement);
-    bool has_move_win = window_drag.movement(movement);
-    if (has_move_win) {
-        
-    }
+    //bool has_move_win = window_drag.movement(movement);
+    /*if (has_move_win) {
+        Vector2f move5 = movement*5;
+        VirtualRectangle vr = selectedWindow.getWindowRectangle();
+        vr.translate(move5);
+        //AttachThreadInput()
+        if (selectedWindow.getThreadId() != GetCurrentThreadId()) {
+            selectedWindow.attachThread(GetCurrentThreadId(), true);
+
+            selectedWindow.setWindowRectangle(vr);
+            selectedWindow.attachThread(GetCurrentThreadId(), false);
+            //windowDetails->newWindowPosition(vr.getLeftTop());
+        }
+    }*/
 }
 
 void AppTest::handleLeftMouseDown(Array2f position){    
@@ -500,6 +543,8 @@ void AppTest::handleLeftMouseDown(Array2f position){
     if(inputController->isPrintKeyDown(81)) ali = RIGHT;
     if(inputController->isPrintKeyDown(87)) ali = CENTRE;
     dragRect->connect(connRectangle, r, ali);
+    
+    //window_drag.handleMouseDown(position);
 
     circ_sta.handleMouseDown(position);
     circ_end.handleMouseDown(position);
@@ -510,6 +555,8 @@ void AppTest::handleLeftMouseUp(Array2f position) {
     bm.activate(position);
     mouseRec->addLeftClickUp();
     inputRecorder->addMouseLeftUp();
+
+    //window_drag.handleMouseUp();
 
     circ_sta.handleMouseUp();
     circ_end.handleMouseUp();

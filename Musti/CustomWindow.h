@@ -112,9 +112,15 @@ private:
 
 	VirtualTriangle test_tri;
 
-	VirtualRectangle monitor;
+	vector<VirtualRectangle> monitors;
+	vector<VirtualRectangle> small_windows;
 	shared_ptr<VirtualRectangle> small_window;
-	NewDragShape window_drag;
+
+	Arrow arr;
+	
+	bool in;
+	shared_ptr<VirtualCircle> circ;
+	HoverShape hoverCirc;
 
 	shared_ptr<MouseRecorder> mouseRec;
 	shared_ptr<InputRecorder> inputRecorder;
