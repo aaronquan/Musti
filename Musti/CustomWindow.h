@@ -122,6 +122,8 @@ private:
 	shared_ptr<VirtualCircle> circ;
 	HoverShape hoverCirc;
 
+	Slider slider;
+
 	shared_ptr<MouseRecorder> mouseRec;
 	shared_ptr<InputRecorder> inputRecorder;
 	shared_ptr<MouseRecordPlayer> mousePlayer;

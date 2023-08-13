@@ -176,6 +176,7 @@ private:
 public:
 	HoverShape();
 	HoverShape(shared_ptr<VirtualShape> sh, ID2D1Brush* b = nullptr);
+	//void setShape(shared_ptr<VirtualShape> sh);
 	void setFunctionIn(function<void()> f);
 	void setFunctionOut(function<void()> f);
 	void activate(Array2f position);
@@ -226,12 +227,16 @@ public:
 class Arrow {
 private:
 	DrawLine tail;
+	VirtualLine line;
 	VirtualTriangle head;
 	//ID2D1Brush* brush;
 public:
 	Arrow();
 	Arrow(Array2f p1, Array2f p2, float tw=4, float hs=6, ID2D1Brush* b=nullptr);
 	Arrow(Array2f p, Vector2f v, float tw=4, float hs=6, ID2D1Brush* b=nullptr);
+	Arrow(Array2f p1, Array2f p2, ID2D1Brush* b=nullptr);
+	Array2f getHeadPoint() const;
+	Array2f getTailPoint() const;
 
 	void setBrush(ID2D1Brush* b);
 	void draw(ID2D1HwndRenderTarget* rt) const;
@@ -242,7 +247,24 @@ class Slider : public DrawObject {
 private:
 	
 	Array2f position;
-	ID2D1Brush* activatedBrush;
-	ID2D1Brush* normalBrush;
+	float slide_width;
+	VirtualLine slide_line;
+	VirtualRectangle rectangle_handle;
+	ID2D1Brush* activated_brush;
+	ID2D1Brush* normal_brush;
+
+	function<void(float)> on_value_change;
+
+	float value; // 0 to 1
 	bool activated;
+
+public:
+	Slider();
+	Slider(Array2f pos, float sw, Vector2f dims, 
+	ID2D1Brush* nb=nullptr, ID2D1Brush* ab=nullptr, ID2D1Brush* lb=nullptr);
+	void setChangeValueFunction(function<void(float)> func);
+	void handleMouseMove(Array2f position);
+	void handleMouseDown(Array2f position);
+	void handleMouseUp(Array2f position);
+	void draw(ID2D1HwndRenderTarget* rt) const;
 };

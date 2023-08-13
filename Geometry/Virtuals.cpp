@@ -6,8 +6,24 @@ VirtualLine::VirtualLine() : VirtualLine(Array2f(), Array2f()){};
 
 VirtualLine::VirtualLine(Array2f p1, Array2f p2, ID2D1Brush* b) : start(p1), end(p2), VirtualShape(b){};
 
+VirtualLine::VirtualLine(Array2f p1, Vector2f v, ID2D1Brush* b) : VirtualLine(p1, Array2f(p1(0) + v(0), p1(1) + v(1)), b){};
+
 bool VirtualLine::isPointInside(Array2f p) const {
 	return false;
+}
+
+Array2f VirtualLine::getStart() const{
+	return start;
+};
+void VirtualLine::setStart(Array2f st) {
+	start = st;
+}
+
+Array2f VirtualLine::getEnd() const {
+	return end;
+}
+void VirtualLine::setEnd(Array2f e) {
+	end = e;
 }
 
 float VirtualLine::side(Array2f pt) const {
@@ -285,6 +301,13 @@ VirtualCircle::VirtualCircle(Array2f ce, float r, ID2D1Brush* b) : VirtualCircle
 VirtualCircle::VirtualCircle(Array2f ce, float rx, float ry, ID2D1Brush* b) 
 : centre(ce), radius_x(rx), radius_y(ry), VirtualShape(b){};
 
+Array2f VirtualCircle::getCentre() const{
+	return centre;
+}
+void VirtualCircle::setCentre(Array2f pt) {
+	centre = pt;
+}
+
 void VirtualCircle::translate(Vector2f movement) {
 	centre = centre + movement;
 }
@@ -309,7 +332,6 @@ void VirtualCircle::draw(ID2D1HwndRenderTarget* rt) const {
 
 void VirtualCircle::fill(ID2D1HwndRenderTarget* rt) const {
 	if (brush) {
-		outputDebugLine("FILL CIRC");
 		D2D1_ELLIPSE eli = D2D1::Ellipse(D2D1::Point2F(centre(0), centre(1)), radius_x, radius_y);
 		rt->FillEllipse(eli, brush);
 	}

@@ -389,7 +389,7 @@ void AppTest::createResources() {
     externWindowsUpdate();
     frameUpdater->addFunction(externWindowsUpdate);
 
-    arr = Arrow(Array2f(200, 200), Array2f(350, 150), 10, 20);
+    arr = Arrow(p1, p2, 10, 20);
     arr.setBrush(brushController->getBrush("green"));
 
     circ = make_shared<VirtualCircle>(Array2f(400, 300), 20, 20, brushController->getBrush("blue"));
@@ -400,6 +400,13 @@ void AppTest::createResources() {
     });
     hoverCirc.setFunctionOut([this]() {
         circ->setBrush(brushController->getBrush("red"));
+    });
+
+    slider = Slider(Array2f(500, 500), 100, Vector2f(10, 15), brushController->getBrush("blue"), 
+    brushController->getBrush("green"), brushController->getBrush("red"));
+
+    slider.setChangeValueFunction([this](float newVal) {
+        brushController->getBrush("green")->SetOpacity(newVal);
     });
 }
 
@@ -451,6 +458,8 @@ void AppTest::drawFrame(ID2D1HwndRenderTarget* rt) {
         swindow.draw(rt);
     }
     small_window->draw(rt);
+
+    slider.draw(rt);
     //window_drag.fill(rt);
 }
 
@@ -508,9 +517,15 @@ void AppTest::handleMouseMove(Array2f position, Vector2f movement) {
     dlm2.setMessage(s);
 
     bool has_move_sta = circ_sta.movement(movement);
-    if(has_move_sta) virt_line.translateStart(movement);
+    if(has_move_sta) {
+        virt_line.translateStart(movement);
+        arr = Arrow(line_sta->getCentre(), line_end->getCentre(), brushController->getBrush("green"));
+    }
     bool has_move_end = circ_end.movement(movement);
-    if (has_move_end) virt_line.translateEnd(movement);
+    if (has_move_end){ 
+        virt_line.translateEnd(movement);
+        arr = Arrow(line_sta->getCentre(), line_end->getCentre(), brushController->getBrush("green"));
+    }
     //bool has_move_win = window_drag.movement(movement);
     /*if (has_move_win) {
         Vector2f move5 = movement*5;
@@ -525,9 +540,12 @@ void AppTest::handleMouseMove(Array2f position, Vector2f movement) {
             //windowDetails->newWindowPosition(vr.getLeftTop());
         }
     }*/
+    slider.handleMouseMove(position);
 }
 
-void AppTest::handleLeftMouseDown(Array2f position){    
+void AppTest::handleLeftMouseDown(Array2f position){   
+    slider.handleMouseDown(position);
+
     list.activate(position);
     nds.handleMouseDown(position);
     //ds.handleMouseDown(position);
@@ -548,9 +566,12 @@ void AppTest::handleLeftMouseDown(Array2f position){
 
     circ_sta.handleMouseDown(position);
     circ_end.handleMouseDown(position);
+
 }
 
 void AppTest::handleLeftMouseUp(Array2f position) {
+    slider.handleMouseUp(position);
+
     nds.handleMouseUp();
     bm.activate(position);
     mouseRec->addLeftClickUp();

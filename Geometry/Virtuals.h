@@ -35,7 +35,13 @@ private:
 public:
 	VirtualLine();
 	VirtualLine(Array2f p1, Array2f p2, ID2D1Brush* b = nullptr);
-	VirtualLine(Array2f p1, Vector2f p2, ID2D1Brush* b = nullptr);
+	VirtualLine(Array2f p1, Vector2f v, ID2D1Brush* b = nullptr);
+
+	Array2f getStart() const;
+	void setStart(Array2f st);
+
+	Array2f getEnd() const;
+	void setEnd(Array2f st);
 
 	float side(Array2f pt) const;
 	static float side(Array2f pt, Array2f p1, Array2f p2); // d == 0 on line
@@ -135,6 +141,10 @@ public:
 	VirtualCircle();
 	VirtualCircle(Array2f ce, float r, ID2D1Brush* b = nullptr);
 	VirtualCircle(Array2f ce, float rx, float ry, ID2D1Brush* b = nullptr);
+
+	Array2f getCentre() const;
+	void setCentre(Array2f pt);
+
 	void translate(Vector2f movement);
 	bool isPointInside(Array2f point) const;
 	Region getPointRegion(Array2f point) const;

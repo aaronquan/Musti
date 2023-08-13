@@ -310,7 +310,6 @@ void HoverShape::draw(ID2D1HwndRenderTarget* rt) const{
 };
 void HoverShape::fill(ID2D1HwndRenderTarget* rt) const{
 	if (shape) {
-		outputDebugLine("FILL");
 		shape->fill(rt);
 	}
 };
@@ -423,7 +422,7 @@ void DropDownList::draw(ID2D1HwndRenderTarget* rt) const {
 Arrow::Arrow() : Arrow(Array2f(), Vector2f()) {};
 
 Arrow::Arrow(Array2f p1, Array2f p2, float tw, float hs, ID2D1Brush* b) :// brush(b),
-tail(DrawLine(p1, p2, b, tw)) {
+tail(DrawLine(p1, p2, b, tw)), line(p1, p2) {
 	
 	Vector2f v(p2(0)-p1(0), p2(1)-p1(1));
 	v.normalize();
@@ -439,6 +438,16 @@ tail(DrawLine(p1, p2, b, tw)) {
 Arrow::Arrow(Array2f p, Vector2f v, float tw, float hs, ID2D1Brush* b) : 
 Arrow(p, Array2f(p(0) + v(0), p(1) + v(1)), tw, hs, b){}
 
+Arrow::Arrow(Array2f p1, Array2f p2, ID2D1Brush* b) : Arrow(p1, p2, 4, 6, b){};
+
+Array2f Arrow::getHeadPoint() const {
+	return line.getStart();
+}
+
+Array2f Arrow::getTailPoint() const {
+	return line.getEnd();
+}
+
 void Arrow::setBrush(ID2D1Brush* b) {
 	tail.setBrush(b);
 	head.setBrush(b);
@@ -450,4 +459,55 @@ void Arrow::draw(ID2D1HwndRenderTarget* rt) const {
 		tail.draw(rt);
 		head.fill(rt);
 	//}
+}
+
+Slider::Slider() : Slider(Array2f(0, 0), 10, Vector2f(2, 2)){};
+
+Slider::Slider(Array2f pos, float sw, Vector2f dims, 
+ID2D1Brush* nb, ID2D1Brush* ab, ID2D1Brush* lb) : position(pos), slide_width(sw),
+normal_brush(nb), activated_brush(ab), value(0), activated(false) {
+	Vector2f hdim = dims / 2;
+	const Array2f left_top(pos(0) - hdim(0), pos(1) - hdim(1));
+	rectangle_handle = VirtualRectangle(left_top, dims, nb);
+	slide_line = VirtualLine(pos, Vector2f(sw, 0), lb);
+}
+
+void Slider::setChangeValueFunction(function<void(float)> func) {
+	on_value_change = func;
+}
+
+void Slider::handleMouseMove(Array2f position) {
+	if (activated) {
+		Vector2f hdim = rectangle_handle.getDimensions() / 2;
+		Array2f start = slide_line.getStart();
+		Array2f end = slide_line.getEnd();
+		Array2f lt(position(0), start(1));
+		if (position(0) < start(0)) {
+			lt(0) = start(0);
+		}
+		else if(position(0) > end(0)) {
+			lt(0) = end(0);
+		}
+		rectangle_handle.setLeftTopPosition(Array2f(lt(0)-hdim(0), lt(1)-hdim(1)));
+		value = (lt(0)-start(0))/slide_width;
+		if(on_value_change) on_value_change(value);
+	}
+}
+
+
+void Slider::handleMouseDown(Array2f position) {
+	if (rectangle_handle.isPointInside(position)) {
+		activated = true;
+		rectangle_handle.setBrush(activated_brush);
+	}
+}
+
+void Slider::handleMouseUp(Array2f position) {
+	activated = false;
+	rectangle_handle.setBrush(normal_brush);
+}
+
+void Slider::draw(ID2D1HwndRenderTarget* rt) const {
+	slide_line.draw(rt);
+	rectangle_handle.fill(rt);
 }
